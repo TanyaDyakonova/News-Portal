@@ -1,0 +1,83 @@
+# Открыть Django shell
+python manage.py shell
+
+# Импорт необходимых моделей
+from django.contrib.auth.models import User
+from news.models import Author, Category, Post, Comment
+
+# Создать двух пользователей
+user1 = User.objects.create_user('username1', password='password123')
+user2 = User.objects.create_user('username2', password='password456')
+
+# Создать объекты модели Author, связанные с пользователями
+author1 = Author.objects.create(user=user1)
+author2 = Author.objects.create(user=user2)
+
+# Добавить 4 категории
+sport_category = Category.objects.create(name='Спорт')
+tech_category = Category.objects.create(name='Технологии')
+education_category = Category.objects.create(name='Образование')
+politics_category = Category.objects.create(name='Политика')
+
+# Создать 2 статьи и 1 новость
+post1 = Post.objects.create(
+    author=author1,
+    publication_type='AR',
+    title='Искусственный интеллект — будущее технологий',
+    content='Искусственный интеллект (AI) изменяет мир технологий. Всё больше компаний используют AI для оптимизации процессов, улучшения клиентского опыта и создания новых продуктов. Недавние достижения в области машинного обучения и больших данных сделали AI более доступным. Тем не менее, некоторые эксперты выражают опасения по поводу этики использования AI, особенно в вопросах конфиденциальности данных.'
+)
+post1.categories.add(tech_category)
+
+post2 = Post.objects.create(
+    author=author2,
+    publication_type='AR',
+    title='Онлайн-образование: преимущества и вызовы',
+    content='Пандемия коронавируса резко увеличила потребность в онлайн-образовании. Это позволило студентам по всему миру продолжать обучение в безопасной среде. Онлайн-курсы предлагают гибкость, позволяя учащимся учиться в удобное для них время. Однако переход к онлайн-образованию также предъявил требования к технологиям и самодисциплине учащихся, которые пока ещё являются вызовом для многих.'
+)
+post2.categories.add(tech_category, education_category)
+
+news = Post.objects.create(
+    author=author1,
+    publication_type='NW',
+    title='Влияние новой политики на международные отношения',
+    content='Новая правительственная политика США оказывает значительное влияние на международные отношения. Все больше стран начинают пересматривать свои союзы и стратегические планы, чтобы адаптироваться к новым условиям. Эксперты предсказывают, что эта политика приведет к изменениям в глобальной торговле и дипломатии, хотя её долгосрочные последствия пока неясны.'
+)
+news.categories.add(education_category, politics_category)
+
+# Добавить как минимум 4 комментария к разным объектам модели Post
+comment1 = Comment.objects.create(post=post1, user=user1, text='Отличная статья!')
+comment2 = Comment.objects.create(post=post2, user=user2, text='Полезная статья.')
+comment3 = Comment.objects.create(post=news, user=user1, text='Интересная новость.')
+comment4 = Comment.objects.create(post=news, user=user2, text='Ценная информация!')
+
+# Применить функции like() и dislike()
+post1.like()
+post1.like()
+post2.like()
+post2.dislike()
+news.like()
+
+comment1.like()
+comment2.dislike()
+comment3.like()
+comment4.like()
+comment4.like()
+
+# Обновить рейтинги пользователей
+author1.update_rating()
+author2.update_rating()
+
+# Вывести username и рейтинг лучшего пользователя
+best_author = Author.objects.order_by('-rating').first()
+print(best_author.user.username, best_author.rating)
+
+# Вывести информацию о лучшей статье
+best_post = Post.objects.order_by('-rating').first()
+print(best_post.created_at, best_post.author.user.username, best_post.rating, best_post.title, best_post.preview())
+
+# Вывести все комментарии к лучшей статье
+for comment in best_post.comments.all():
+    print(comment.created_at, comment.user.username, comment.rating, comment.text)
+
+# Закрыть Django shell
+exit()
