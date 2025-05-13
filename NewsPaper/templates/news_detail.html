@@ -1,0 +1,9 @@
+{% extends 'flatpages/default.html' %}
+
+{% block content %}
+    <article>
+        <h1>{{ news.title }}</h1>
+        <p>{{ news.created_at|date:"d.m.Y" }}</p>
+        <div>{{ news.content }}</div>
+    </article>
+{% endblock %}
