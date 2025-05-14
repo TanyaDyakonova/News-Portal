@@ -1,10 +1,18 @@
 {% extends 'flatpages/default.html' %}
 
-{% load filters %}
+{% load custom_filters %}
 
+{% load custom_tags %}
 
 {% block content %}
-    <h1>Все новости (всего: {{news_list|length }})</h1>
+    <h1>Все новости и статьи (всего: {{ news_list|length }})</h1>
+
+    <form method="get">
+        {{ filterset.form.as_p }}
+        <a href="{% url 'news_search' %}" class="search-link">Поиск</a>&nbsp;&nbsp;&nbsp;
+        <a href="{% url 'article_create' %}">Создать статью</a>&nbsp;&nbsp;&nbsp;
+        <a href="{% url 'news_create' %}">Создать новость</a>
+    </form>
 
     <ul>
         {% for post in news_list %}
@@ -15,5 +23,36 @@
             </li>
         {% endfor %}
     </ul>
+
+
+<nav class="pagination">
+    <ul>
+        {% if page_obj.number != 1 %}
+            <li><a href="?{% url_replace page=1 %}">1</a></li>
+        {% endif %}
+
+        {% if page_obj.number > 3 %}
+            <li>...</li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+                <li><strong>{{ num }}</strong></li>
+            {% elif num >= page_obj.number|add:"-1" and num <= page_obj.number|add:"1" %}
+                {% if num != 1 and num != page_obj.paginator.num_pages %}
+                    <li><a href="?{% url_replace page=num %}">{{ num }}</a></li>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
+            <li>...</li>
+        {% endif %}
+
+        {% if page_obj.number != page_obj.paginator.num_pages %}
+            <li><a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a></li>
+        {% endif %}
+    </ul>
+</nav>
 
 {% endblock %}

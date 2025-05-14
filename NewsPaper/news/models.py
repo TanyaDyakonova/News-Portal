@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 from .resources import PUBLICATION_CHOICES
+
 
 
 class Author(models.Model):
@@ -47,6 +49,9 @@ class Post(models.Model):
 
     def preview(self):
         return self.content[:124] + ('...' if len(self.content) > 124 else '')
+
+    def get_absolute_url(self):
+        return reverse('news_detail', kwargs={'pk': self.pk})
 
 
 class PostCategory(models.Model):

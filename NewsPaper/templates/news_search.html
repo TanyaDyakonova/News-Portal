@@ -1,0 +1,53 @@
+{% extends 'flatpages/default.html' %}
+{% load custom_filters %}
+{% load custom_tags %}
+
+
+{% block content %}
+<h1>Поиск новостей и статей</h1>
+
+<form method="get">
+    {{ filter.form.as_p }}
+    <button type="submit">Поиск</button>
+</form>
+
+<ul>
+    {% for post in news_list %}
+        <li>
+            <h4><a href="{% url 'news_detail' post.pk %}">{{ post.title|censor }}</a></h4>
+            <p>{{ post.created_at|date:"d.m.Y" }}</p>
+            <p>{{ post.content|truncatewords:20|censor }}</p>
+        </li>
+    {% endfor %}
+</ul>
+
+
+<nav class="pagination">
+    <ul>
+        {% if page_obj.has_previous %}
+            {% if page_obj.number > 3 %}
+                <li><a href="?{% url_replace page=1 %}">1</a></li>
+                <li>...</li>
+            {% endif %}
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+                <li><strong>{{ num }}</strong></li>
+            {% elif num >= page_obj.number|add:"-1" and num <= page_obj.number|add:"1" %}
+                {% if num != 1 and num != page_obj.paginator.num_pages %}
+                    <li><a href="?{% url_replace page=num %}">{{ num }}</a></li>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            {% if page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
+                <li>...</li>
+                <li><a href="?{% url_replace page=page_obj.paginator.num_pages %}">{{ page_obj.paginator.num_pages }}</a></li>
+            {% endif %}
+        {% endif %}
+    </ul>
+</nav>
+
+{% endblock %}
