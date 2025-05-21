@@ -1,11 +1,23 @@
 {% extends 'flatpages/default.html' %}
 
 {% load custom_filters %}
-
 {% load custom_tags %}
+{% load socialaccount %}  <!-- Добавлено для использования provider_login_url -->
 
 {% block content %}
     <h1>Все новости и статьи (всего: {{ news_list|length }})</h1>
+
+    <!-- Кнопки входа и регистрации -->
+    <div class="auth-links">
+        {% if not request.user.is_authenticated %}
+            <a href="{% url 'account_login' %}" class="btn">Вход</a>&nbsp;&nbsp;&nbsp;
+            <a href="{% url 'account_signup' %}" class="btn">Регистрация</a>&nbsp;&nbsp;&nbsp;
+            <a href="{% provider_login_url 'yandex' %}?process=login" class="btn-social">Войти через Yandex</a>
+        {% else %}
+            <p>Добро пожаловать, {{ request.user.username }}!</p>
+            <a href="{% url 'account_logout' %}">Выйти</a>
+        {% endif %}
+    </div>
 
     <form method="get">
         {{ filterset.form.as_p }}
@@ -13,6 +25,13 @@
         <a href="{% url 'article_create' %}">Создать статью</a>&nbsp;&nbsp;&nbsp;
         <a href="{% url 'news_create' %}">Создать новость</a>
     </form>
+
+    {% if 'authors' not in request.user.groups.all %}
+      <form method="post" action="{% url 'become_author' %}">
+        {% csrf_token %}
+        <button type="submit">Стать автором</button>
+      </form>
+    {% endif %}
 
     <ul>
         {% for post in news_list %}

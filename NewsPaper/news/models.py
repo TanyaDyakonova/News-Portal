@@ -28,7 +28,7 @@ class Category(models.Model):
 
 
 class Post(models.Model):
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='posts')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     publication_type = models.CharField(max_length=2, choices=PUBLICATION_CHOICES, default='AR')
     created_at=models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=200)
