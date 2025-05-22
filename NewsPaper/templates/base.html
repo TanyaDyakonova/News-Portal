@@ -1,14 +1,37 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>{% block head_title %}{% endblock head_title %}</title>
-    </head>
-    <body>
-        {% block body %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Новости{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <header class="custom-text">
+        <h1>Новостной сайт</h1>
+        <nav>
+            <ul>
+                <li><a href="{% url 'news_list' %}">Все новости</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <main>
         {% block content %}
-        {% endblock content %}
-        {% endblock body %}
-        {% block extra_body %}
-        {% endblock extra_body %}
-    </body>
+        {% endblock %}
+    </main>
+    
+    <footer>
+        <p>© 2025 Новостной сайт</p>
+    </footer>
+</body>
 </html>

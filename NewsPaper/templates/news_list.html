@@ -2,12 +2,12 @@
 
 {% load custom_filters %}
 {% load custom_tags %}
-{% load socialaccount %}  <!-- Добавлено для использования provider_login_url -->
+{% load socialaccount %}
 
 {% block content %}
+
     <h1>Все новости и статьи (всего: {{ news_list|length }})</h1>
 
-    <!-- Кнопки входа и регистрации -->
     <div class="auth-links">
         {% if not request.user.is_authenticated %}
             <a href="{% url 'account_login' %}" class="btn">Вход</a>&nbsp;&nbsp;&nbsp;

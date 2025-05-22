@@ -8,4 +8,25 @@
     </div>
     <a href="{% url 'news_edit' news.pk %}">Редактировать</a>
     <a href="{% url 'news_delete' news.pk %}">Удалить</a>
+
+    {% if user.is_authenticated %}
+        <h3>Категории:</h3>
+        <ul>
+            {% for category in news.categories.all %}
+                <li>
+                    {{ category.name }}
+
+                    {% if user not in category.subscribers.all %}
+                        <form action="{% url 'subscribe' category.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit">Подписаться</button>
+                        </form>
+                    {% else %}
+                        <span>Вы подписаны</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 {% endblock %}
+

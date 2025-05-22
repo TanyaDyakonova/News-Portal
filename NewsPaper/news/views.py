@@ -3,12 +3,16 @@ from django.urls import reverse_lazy
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
-
+from django.shortcuts import get_object_or_404, redirect
 from django_filters.views import FilterView
-from django.shortcuts import redirect
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
-from .models import Post
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.timezone import now
+from django.contrib import messages
+from allauth.account.views import SignupView
+from .models import Post, Category
 from .filters import PostFilter
 from .forms import PostForm
 
@@ -43,9 +47,22 @@ class NewsCreate(PermissionRequiredMixin, CreateView):
     permission_required = 'news.add_post'
 
     def form_valid(self, form):
+        user = self.request.user
+        today = now().date()
+        post_count_today = Post.objects.filter(
+            author=user,
+            created_at__date=today
+        ).count()
+
+        if post_count_today >= 3:
+            messages.error(self.request, 'Вы не можете создавать более 3 публикаций в сутки.')
+            return self.form_invalid(form)
+
         form.instance.publication_type = 'NW'
         form.instance.author = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        send_notifications(form.instance)
+        return response
 
 
 class ArticleCreate(PermissionRequiredMixin, CreateView):
@@ -56,9 +73,23 @@ class ArticleCreate(PermissionRequiredMixin, CreateView):
     permission_required = 'news.add_post'
 
     def form_valid(self, form):
+        user = self.request.user
+        today = now().date()
+        post_count_today = Post.objects.filter(
+            author=user,
+            created_at__date=today
+        ).count()
+
+        if post_count_today >= 3:
+            messages.error(self.request, 'Вы не можете создавать более 3 публикаций в сутки.')
+            return self.form_invalid(form)
+
         form.instance.publication_type = 'AR'
         form.instance.author = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        send_notifications(form.instance)
+        return response
+
 
 class NewsUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = PostForm
@@ -113,3 +144,33 @@ def become_author(request):
     if not user.groups.filter(name='authors').exists():
         author_group.user_set.add(user)
     return redirect('news_list')
+
+
+@login_required
+def subscribe_to_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    category.subscribers.add(request.user)
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+
+def send_notifications(post):
+    categories = post.categories.all()
+    subscribers = set()
+    for category in categories:
+        subscribers.update(category.subscribers.all())
+
+    for user in subscribers:
+        html_content = render_to_string(
+            'email_notification.html',
+            {'post': post, 'username': user.username}
+        )
+        msg = EmailMultiAlternatives(
+            subject=post.title,
+            body='',
+            from_email='tanyamars16@yandex.ru',
+            to=[user.email]
+        )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send()
+
+

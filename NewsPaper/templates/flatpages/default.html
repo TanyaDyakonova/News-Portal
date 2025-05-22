@@ -1,25 +1,10 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новости</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-</head>
-<body>
-    <header class="custom-text">
-        <h1>Новостной сайт</h1>
-        <nav>
-            <ul>
-                <li><a href="{% url 'news_list' %}">Все новости</a></li>
-            </ul>
-        </nav>
-    </header>
+{% extends "base.html" %}
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
-</body>
-</html>
+{% block title %}Новости{% endblock %}
+
+{% block content %}
+    <h2>Добро пожаловать на наш новостной сайт</h2>
+    <p>Здесь вы найдете самые свежие новости!</p>
+    {% block page_content %}
+    {% endblock %}
+{% endblock %}
