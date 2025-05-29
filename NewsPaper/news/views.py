@@ -7,14 +7,12 @@ from django.shortcuts import get_object_or_404, redirect
 from django_filters.views import FilterView
 from django.contrib.auth.models import Group
 from django.contrib.auth.decorators import login_required
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
 from django.utils.timezone import now
 from django.contrib import messages
-from allauth.account.views import SignupView
 from .models import Post, Category
 from .filters import PostFilter
 from .forms import PostForm
+from .tasks import send_post_notification
 
 
 class NewsList(ListView):
@@ -61,7 +59,7 @@ class NewsCreate(PermissionRequiredMixin, CreateView):
         form.instance.publication_type = 'NW'
         form.instance.author = self.request.user
         response = super().form_valid(form)
-        send_notifications(form.instance)
+        send_post_notification.delay(form.instance.pk)
         return response
 
 
@@ -87,7 +85,7 @@ class ArticleCreate(PermissionRequiredMixin, CreateView):
         form.instance.publication_type = 'AR'
         form.instance.author = self.request.user
         response = super().form_valid(form)
-        send_notifications(form.instance)
+        send_post_notification.delay(form.instance.pk)
         return response
 
 
@@ -151,26 +149,3 @@ def subscribe_to_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     category.subscribers.add(request.user)
     return redirect(request.META.get('HTTP_REFERER', '/'))
-
-
-def send_notifications(post):
-    categories = post.categories.all()
-    subscribers = set()
-    for category in categories:
-        subscribers.update(category.subscribers.all())
-
-    for user in subscribers:
-        html_content = render_to_string(
-            'email_notification.html',
-            {'post': post, 'username': user.username}
-        )
-        msg = EmailMultiAlternatives(
-            subject=post.title,
-            body='',
-            from_email='tanyamars16@yandex.ru',
-            to=[user.email]
-        )
-        msg.attach_alternative(html_content, "text/html")
-        msg.send()
-
-
