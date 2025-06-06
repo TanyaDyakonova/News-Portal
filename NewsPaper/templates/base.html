@@ -10,11 +10,14 @@
 <body>
     <header class="custom-text">
         <h1>Новостной сайт</h1>
+        {% load cache %}
+        {% cache 3600 navigation %}
         <nav>
             <ul>
                 <li><a href="{% url 'news_list' %}">Все новости</a></li>
             </ul>
         </nav>
+        {% endcache %}
     </header>
 
     {% if messages %}

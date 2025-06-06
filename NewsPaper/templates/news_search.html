@@ -1,7 +1,7 @@
 {% extends 'flatpages/default.html' %}
 {% load custom_filters %}
 {% load custom_tags %}
-
+{% load cache %}
 
 {% block content %}
 <h1>Поиск новостей и статей</h1>
@@ -21,7 +21,7 @@
     {% endfor %}
 </ul>
 
-
+{% cache 300 search_pagination request.get_full_path %}
 <nav class="pagination">
     <ul>
         {% if page_obj.has_previous %}
@@ -49,5 +49,6 @@
         {% endif %}
     </ul>
 </nav>
+{% endcache %}
 
 {% endblock %}

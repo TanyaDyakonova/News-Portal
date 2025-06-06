@@ -3,6 +3,9 @@ from django.urls import reverse_lazy
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.views import FilterView
 from django.contrib.auth.models import Group
@@ -14,7 +17,7 @@ from .filters import PostFilter
 from .forms import PostForm
 from .tasks import send_post_notification
 
-
+@method_decorator(cache_page(60), name='dispatch')
 class NewsList(ListView):
     model = Post
     template_name = 'news_list.html'
@@ -35,6 +38,14 @@ class NewsDetail(DetailView):
     model = Post
     template_name = 'news_detail.html'
     context_object_name = 'news'
+
+    def get_object(self, *args, **kwargs):
+        obj = cache.get(f'post-{self.kwargs["pk"]}', None)
+
+        if not obj:
+            obj = super().get_object(queryset=self.queryset)
+            cache.set(f'post-{self.kwargs["pk"]}', obj)
+        return obj
 
 
 class NewsCreate(PermissionRequiredMixin, CreateView):
@@ -100,6 +111,11 @@ class NewsUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         post = self.get_object()
         return self.request.user == post.author
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        cache.delete(f'post-{self.object.pk}')
+        return response
+
 
 class ArticleUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = PostForm
@@ -111,6 +127,11 @@ class ArticleUpdate(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         post = self.get_object()
         return self.request.user == post.author
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        cache.delete(f'post-{self.object.pk}')
+        return response
 
 
 class NewsDelete(PermissionRequiredMixin, UserPassesTestMixin, DeleteView):

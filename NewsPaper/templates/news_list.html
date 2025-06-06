@@ -3,6 +3,7 @@
 {% load custom_filters %}
 {% load custom_tags %}
 {% load socialaccount %}
+{% load cache %}
 
 {% block content %}
 
@@ -43,7 +44,7 @@
         {% endfor %}
     </ul>
 
-
+{% cache 300 news_pagination request.get_full_path %}
 <nav class="pagination">
     <ul>
         {% if page_obj.number != 1 %}
@@ -73,5 +74,6 @@
         {% endif %}
     </ul>
 </nav>
+{% endcache %}
 
 {% endblock %}
